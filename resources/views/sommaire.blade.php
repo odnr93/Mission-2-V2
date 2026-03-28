@@ -7,7 +7,7 @@
              </div>  
                <ul id="menuList">
                    <li >
-                    <strong>Bonjour {{ $visiteur['nom'] . ' ' . $visiteur['prenom'] }} vous êtes connecter en tant que visisteur </strong>
+                    <strong>Bonjour {{ $visiteur['nom'] . ' ' . $visiteur['prenom'] }} vous êtes connecté en tant que visiteur </strong>
                       
                    </li>
                   <li class="smenu">
@@ -17,9 +17,9 @@
                     <a href="{{ route('chemin_selectionMois') }}" title="Consultation de mes fiches de frais">Mes fiches de frais</a>
                   </li>
                <li class="smenu">
-                <a href="{{ route('chemin_deconnexion') }}"" title="Se déconnecter">Déconnexion</a>
+                <a href="{{ route('chemin_deconnexion') }}" title="Se déconnecter">Déconnexion</a>
                   </li>
                 </ul>
                
         </div>
-    @endsection          
+    @endsection

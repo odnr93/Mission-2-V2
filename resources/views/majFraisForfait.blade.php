@@ -32,9 +32,9 @@
                                 @else
                                     name = "lesFrais[{{$key}}]"
                                     value = "{{$frais}}"
-                                @endif 
-                              
-                        </p>
+                                @endif
+                    >
+                    </p>
                 @endforeach
             </fieldset>
         </div>

@@ -17,6 +17,7 @@ class connexionController extends Controller
         $comptable = PdoGsb::getInfosComptable($login,$mdp);
         if(is_array($comptable)){
             session(['visiteur' => $comptable]);
+            session(['type' => 'comptable']);
             return view('sommaireComptable')->with('visiteur',session('visiteur'));
         }
         if(!is_array($visiteur)){ 
@@ -25,12 +26,14 @@ class connexionController extends Controller
         }
         else{
             session(['visiteur' => $visiteur]);
+            session(['type' => 'visiteur']);
             return view('sommaire')->with('visiteur',session('visiteur'));
         }
     } 
 
     function deconnecter(){
             session(['visiteur' => null]);
+            session(['type' => null]);
             return redirect()->route('chemin_connexion');
        
            

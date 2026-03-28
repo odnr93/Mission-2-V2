@@ -218,11 +218,23 @@ class PdoGsb{
 		$this->monPdo->exec($req);
 	}
 
+	/**
+	 * Supprime une fiche de frais et ses lignes forfait associées
+	 * @param $idVisiteur
+	 * @param $mois sous la forme aaaamm
+	 */
+	public function supprimerFiche($idVisiteur, $mois){
+		$req = "delete from lignefraisforfait where idvisiteur = '$idVisiteur' and mois = '$mois'";
+		$this->monPdo->exec($req);
+		$req = "delete from fichefrais where idvisiteur = '$idVisiteur' and mois = '$mois'";
+		$this->monPdo->exec($req);
+	}
+
 	public function getLesFichesValider(){
 		$req = "select fichefrais.idvisiteur as idvisiteur, fichefrais.mois as mois, fichefrais.montantValide as montantValide, 
 		fichefrais.dateModif as dateModif, visiteur.nom as nom, visiteur.prenom as prenom, fichefrais.idEtat as idEtat
 		from  fichefrais inner join visiteur on fichefrais.idvisiteur = visiteur.id
-		where fichefrais.idEtat ='CL' 
+		where fichefrais.idEtat in ('CL','VA','RB') 
 		order by fichefrais.mois desc ";
 		$res = $this->monPdo->query($req);
 		$lesFiches =array();

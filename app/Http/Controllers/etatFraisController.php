@@ -11,11 +11,21 @@ class etatFraisController extends Controller
             $visiteur = session('visiteur');
             $idVisiteur = $visiteur['id'];
             $lesMois = PdoGsb::getLesMoisDisponibles($idVisiteur);
-		    // Afin de sélectionner par défaut le dernier mois dans la zone de liste
-		    // on demande toutes les clés, et on prend la première,
-		    // les mois étant triés décroissants
-		    $lesCles = array_keys( $lesMois );
-		    $moisASelectionner = $lesCles[0];
+            // Si aucun mois disponible, on renvoie vers la page sommaire avec un message
+            if(empty($lesMois)){
+                $erreurs[] = "Aucune fiche de frais disponible pour ce visiteur.";
+                // Renvoyer la même vue listemois mais sans mois et avec le message d'erreur
+                return view('listemois')
+                        ->with('lesMois', [])
+                        ->with('leMois', null)
+                        ->with('visiteur', $visiteur)
+                        ->with('erreurs', $erreurs);
+            }
+            // Afin de sélectionner par défaut le dernier mois dans la zone de liste
+            // on demande toutes les clés, et on prend la première,
+            // les mois étant triés décroissants
+            $lesCles = array_keys( $lesMois );
+            $moisASelectionner = $lesCles[0];
             return view('listemois')
                         ->with('lesMois', $lesMois)
                         ->with('leMois', $moisASelectionner)

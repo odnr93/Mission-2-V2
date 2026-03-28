@@ -50,6 +50,42 @@ Route::post('sauvegarderFrais',[
 
 Route::get('suiviPaiment',[
         'as'=>'chemin_SuiviPaiment',
-        'uses'=>'gererFraisController@suivipaiment'
+        'uses'=>'gererFraisController@suiviPaiment'
 ]);
 
+// AJOUT : route pour la validation individuelle (ancien bouton "Valider" par ligne)
+Route::post('validerPaiementIndividuel',[
+        'as'=>'chemin_validerPaiement_individuel',
+        'uses'=>'gererFraisController@validerPaiementIndividuel'
+]);
+
+// ANCIEN CODE conservé : renommé pour la validation multiple (cases à cocher)
+Route::post('validerPaiement',[
+        'as'=>'chemin_validerPaiement',
+        'uses'=>'gererFraisController@validerPaiement'
+]);
+
+
+
+Route::post('annulerPaiement',[
+        'as'=>'chemin_annulerPaiement',
+        'uses'=>'gererFraisController@annulerPaiement'
+]);
+
+// AJOUT : route pour passer une fiche à l'état Remboursée (RB)
+Route::post('rembourserPaiement',[
+        'as'=>'chemin_rembourserPaiement',
+        'uses'=>'gererFraisController@rembourserPaiement'
+]);
+
+// AJOUT : route pour annuler un remboursement (RB → CL)
+Route::post('annulerRemboursement',[
+        'as'=>'chemin_annulerRemboursement',
+        'uses'=>'gererFraisController@annulerRemboursement'
+]);
+
+// AJOUT : route pour supprimer plusieurs fiches
+Route::post('supprimerFiches',[
+        'as'=>'chemin_supprimerFiches',
+        'uses'=>'gererFraisController@supprimerFiches'
+]);
