@@ -18,6 +18,14 @@
       #menuGauche, .no-print { display: none !important; }
       #contenu { margin: 0; padding: 0; }
     }
+    .btn-large {
+      padding: 15px 40px !important;
+      font-size: 15px !important;
+      white-space: nowrap !important;
+      min-width: 200px !important;
+      height: 50px !important;
+      cursor: pointer;
+    }
   </style>
 
   <div id="contenu">
@@ -110,7 +118,7 @@
                     {{ csrf_field() }}
                     <input type="hidden" name="idVisiteur" value="{{ $fiche['idvisiteur'] }}">
                     <input type="hidden" name="mois" value="{{ $fiche['mois'] }}">
-                    <button type="submit">Annuler remboursement</button>
+                    <button type="submit">Annuler</button>
                   </form>
                 @endif
               </td>
@@ -120,8 +128,9 @@
         </table>
         {{-- Bouton de validation groupée (CL → VA) + bouton imprimer --}}
         <p class="no-print">
-          <button type="submit">Valider la sélection</button>
-          <button type="button" onclick="window.print()">Imprimer / Enregistrer en PDF</button>
+          <button type="submit" class="btn-large">Valider la sélection</button>
+          <button type="button" class="btn-large" onclick="window.print()">Enregistrer en PDF</button>
+          <button type="button" class="btn-large" style="background-color:#c0392b; color:#fff;" onclick="document.getElementById('formSupprimer').dispatchEvent(new Event('submit'))">Supprimer la sélection</button>
         </p>
       </form>
 
@@ -130,9 +139,6 @@
             onsubmit="return confirm('Confirmer la suppression des fiches sélectionnées ? Cette action est irréversible.')">
         {{ csrf_field() }}
         <div id="champsSuppr"></div>
-        <p class="no-print">
-          <button type="submit" style="background-color:#c0392b; color:#fff;">Supprimer la sélection</button>
-        </p>
       </form>
     @else
       <p>Aucune fiche a suivre pour l'instant.</p>

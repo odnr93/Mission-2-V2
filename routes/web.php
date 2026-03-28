@@ -89,3 +89,9 @@ Route::post('supprimerFiches',[
         'as'=>'chemin_supprimerFiches',
         'uses'=>'gererFraisController@supprimerFiches'
 ]);
+
+// AJOUT : route pour l'édition PDF des fiches de remboursement
+Route::get('editionPdf',[
+        'as'=>'chemin_editionPdf',
+        'uses'=>'gererFraisController@editerPdf'
+]);

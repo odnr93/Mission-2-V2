@@ -14,6 +14,9 @@
                      <a href="{{ route('chemin_SuiviPaiment')}}" title="Saisie de paiment ">Suivi de paiment</a>
                   </li>
                   <li class="smenu">
+                     <a href="{{ route('chemin_editionPdf')}}" title="Édition PDF des remboursements">Édition PDF</a>
+                  </li>
+                  <li class="smenu">
                     <a href="{{ route('chemin_selectionMois') }}" title="Consultation de mes fiches de frais">Mes fiches de frais</a>
                   </li>
                <li class="smenu">

@@ -189,7 +189,7 @@
     </div>
 
     {{-- Une fiche par visiteur --}}
-    @forelse($fiches as $fiche)
+    @forelse($fichesVA as $fiche)
         <div class="fiche">
             <div class="fiche-header">
                 {{ $fiche['nom'] }} {{ $fiche['prenom'] }}
