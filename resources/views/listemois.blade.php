@@ -1,4 +1,4 @@
-@extends ('sommaire')
+@extends (session('type') == 'comptable' ? 'sommaireComptable' : 'sommaire')
     @section('contenu1')
       <div id="contenu">
         <h2>Mes fiches de frais</h2>
@@ -8,18 +8,18 @@
         @if(!empty($lesMois))
         <h3>Mois à sélectionner : </h3>
         <form action="{{ route('chemin_listeFrais') }}" method="post">
-          {{ csrf_field() }} <!-- laravel va ajouter un champ caché avec un token -->
+          {{ csrf_field() }}
           <div class="corpsForm"><p>
             <label for="lstMois" >Mois : </label>
             <select id="lstMois" name="lstMois">
                 @foreach($lesMois as $mois)
                     @if ($mois['mois'] == $leMois)
                       <option selected value="{{ $mois['mois'] }}">
-                        {{ $mois['numMois']}}/{{$mois['numAnnee'] }} 
+                        {{ $mois['numMois']}}/{{$mois['numAnnee'] }}
                       </option>
-                    @else 
+                    @else
                       <option value="{{ $mois['mois'] }}">
-                        {{ $mois['numMois']}}/{{$mois['numAnnee'] }} 
+                        {{ $mois['numMois']}}/{{$mois['numAnnee'] }}
                       </option>
                     @endif
                 @endforeach
@@ -30,9 +30,10 @@
           <p>
             <input id="ok" type="submit" value="Valider" size="20" />
             <input id="annuler" type="reset" value="Effacer" size="20" />
-          </p> 
+          </p>
           </div>
         </form>
         @endif
 
+  @yield('contenu2')
   @endsection

@@ -5,289 +5,157 @@ use Illuminate\Http\Request;
 use PdoGsb;
 use MyDate;
 
-class gererFraisController extends Controller{
+class gererFraisController extends Controller {
+
+    /**
+     * Retourne l'utilisateur connecté (visiteur ou comptable), ou null.
+     */
+    private function getUtilisateurConnecte(){
+        if(session('type') == 'comptable' && session('comptable') != null){
+            return session('comptable');
+        }
+        if(session('type') == 'visiteur' && session('visiteur') != null){
+            return session('visiteur');
+        }
+        return null;
+    }
 
     function saisirFrais(Request $request){
-        if( session('visiteur') != null){
-            $visiteur = session('visiteur');
-            if(session('type') == 'comptable'){
-                return redirect()->route('chemin_SuiviPaiment');
-            }
-            $idVisiteur = $visiteur['id'];
-            $anneeMois = MyDate::getAnneeMoisCourant();
-            $mois = $anneeMois['mois'];
-            if(PdoGsb::estPremierFraisMois($idVisiteur,$mois)){
-                 PdoGsb::creeNouvellesLignesFrais($idVisiteur,$mois);
-            }
-            $lesFrais = PdoGsb::getLesFraisForfait($idVisiteur,$mois);
-            $view = view('majFraisForfait')
-                    ->with('lesFrais', $lesFrais)
-                    ->with('numMois',$anneeMois['numMois'])
-                    ->with('erreurs',null)
-                    ->with('numAnnee',$anneeMois['numAnnee'])
-                    ->with('visiteur',$visiteur)
-                    ->with('message',"")
-                    ->with ('method',$request->method());
-            return $view;
+        $user = $this->getUtilisateurConnecte();
+        if($user == null) return view('connexion')->with('erreurs', null);
+
+        if(session('type') == 'comptable') return redirect()->route('chemin_SuiviPaiment');
+
+        $visiteur = session('visiteur');
+        $idVisiteur = $visiteur['id'];
+        $anneeMois = MyDate::getAnneeMoisCourant();
+        $mois = $anneeMois['mois'];
+
+        if(PdoGsb::estPremierFraisMois($idVisiteur, $mois)){
+            PdoGsb::creeNouvellesLignesFrais($idVisiteur, $mois);
         }
-        else{
-            return view('connexion')->with('erreurs',null);
-        }
+
+        $lesFrais = PdoGsb::getLesFraisForfait($idVisiteur, $mois);
+
+        return view('majFraisForfait')
+            ->with('lesFrais', $lesFrais)
+            ->with('numMois', $anneeMois['numMois'])
+            ->with('numAnnee', $anneeMois['numAnnee'])
+            ->with('erreurs', null)
+            ->with('message', "")
+            ->with('visiteur', $visiteur)
+            ->with('method', $request->method());
     }
 
     function sauvegarderFrais(Request $request){
-        if( session('visiteur')!= null){
-            $visiteur = session('visiteur');
-            if(session('type') == 'comptable'){
-                return redirect()->route('chemin_SuiviPaiment');
-            }
-            $idVisiteur = $visiteur['id'];
-            $anneeMois = MyDate::getAnneeMoisCourant();
-            $mois = $anneeMois['mois'];
-            $lesFrais = $request['lesFrais'];
-            $lesLibFrais = $request['lesLibFrais'];
-            $nbNumeric = 0;
-            foreach($lesFrais as $unFrais){
-                if(is_numeric($unFrais))
-                    $nbNumeric++;
-            }
-            $view = view('majFraisForfait')->with('lesFrais', $lesFrais)
-                    ->with('numMois',$anneeMois['numMois'])
-                    ->with('numAnnee',$anneeMois['numAnnee'])
-                    ->with('visiteur',$visiteur)
-                    ->with('lesLibFrais',$lesLibFrais)
-                    ->with ('method',$request->method());
-            if($nbNumeric == 4){
-                $message = "Votre fiche a été mise à jour";
-                $erreurs = null;
-                PdoGsb::majFraisForfait($idVisiteur,$mois,$lesFrais);
-        	}
-		    else{
-                $erreurs[] ="Les valeurs des frais doivent être numériques";
-                $message = '';
-            }
-            return $view->with('erreurs',$erreurs)
-                        ->with('message',$message);
+        $user = $this->getUtilisateurConnecte();
+        if($user == null) return view('connexion')->with('erreurs', null);
+        if(session('type') == 'comptable') return redirect()->route('chemin_SuiviPaiment');
+
+        $visiteur = session('visiteur');
+        $idVisiteur = $visiteur['id'];
+        $anneeMois = MyDate::getAnneeMoisCourant();
+        $mois = $anneeMois['mois'];
+        $lesFrais = $request['lesFrais'];
+        $lesLibFrais = $request['lesLibFrais'];
+
+        $nbNumeric = 0;
+        foreach($lesFrais as $unFrais){
+            if(is_numeric($unFrais)) $nbNumeric++;
         }
-        else{
-            return view('connexion')->with('erreurs',null);
+
+        $view = view('majFraisForfait')
+            ->with('lesFrais', $lesFrais)
+            ->with('numMois', $anneeMois['numMois'])
+            ->with('numAnnee', $anneeMois['numAnnee'])
+            ->with('visiteur', $visiteur)
+            ->with('lesLibFrais', $lesLibFrais)
+            ->with('method', $request->method());
+
+        if($nbNumeric == 4){
+            $message = "Votre fiche a été mise à jour";
+            PdoGsb::majFraisForfait($idVisiteur, $mois, $lesFrais);
+            return $view->with('erreurs', null)->with('message', $message);
+        } else {
+            return $view->with('erreurs', ["Les valeurs doivent être numériques"])->with('message', '');
         }
     }
 
     function suiviPaiment(Request $request){
-        if( session('visiteur') != null){
-            $visiteur = session('visiteur');
-            $comptables = PdoGsb::getLesFichesValider();
-            return view('suiviPaiment')
-                ->with('visiteur', $visiteur)
-                ->with('fiches', $comptables);
-        }
-        else{
-            return view('connexion')->with('erreurs',null);
-        }
+        if($this->getUtilisateurConnecte() == null) return view('connexion')->with('erreurs', null);
+        $fiches = PdoGsb::getLesFichesValider();
+        return view('suiviPaiment')
+            ->with('comptable', session('comptable'))
+            ->with('visiteur', session('visiteur'))
+            ->with('fiches', $fiches);
     }
 
-    // Validation individuelle d'une fiche : CL → VA
-    // (bouton "Valider" par ligne dans le tableau)
-    function validerPaiementIndividuel(Request $request){
-        if( session('visiteur') == null){
-            return view('connexion')->with('erreurs',null);
-        }
-
-        $idVisiteur = $request->input('idVisiteur');
-        $mois = $request->input('mois');
-
-        if(empty($idVisiteur) || empty($mois)){
-            return redirect()->route('chemin_SuiviPaiment')
-                    ->with('message', 'La fiche sélectionnée est invalide.');
-        }
-
-        $fiche = PdoGsb::getLesInfosFicheFrais($idVisiteur, $mois);
-        if(!is_array($fiche) || $fiche['idEtat'] !== 'CL'){
-            return redirect()->route('chemin_SuiviPaiment')
-                    ->with('message', 'Cette fiche ne peut pas être validée.');
-        }
-
-        PdoGsb::majEtatFicheFrais($idVisiteur, $mois, 'VA');
-
-        return redirect()->route('chemin_SuiviPaiment')
-                ->with('message', 'La fiche a été validée et mise en paiement.');
-    }
-
-    /*
-     * Validation groupée via cases à cocher : CL → VA
-     *
-     * Flux étendu par rapport au cahier des charges (PDF) :
-     *   CL (en attente) → VA (mise en paiement) → RB (remboursée)
-     *
-     * Le PDF prévoit un passage direct CL → RB.
-     * L'état VA a été ajouté pour permettre une vérification intermédiaire
-     * par le comptable avant la confirmation du remboursement effectif.
+    /**
+     * GESTION ACTIONS : Centralise les boutons individuels et de masse.
+     * Utilise les messages exacts demandés.
      */
-    function validerPaiement(Request $request){
-        if( session('visiteur') == null){
-            return view('connexion')->with('erreurs',null);
+    function traiterActionMasse(Request $request){
+        if($this->getUtilisateurConnecte() == null) return view('connexion')->with('erreurs', null);
+        $msg = "";
+
+        // 1. Détection d'une action individuelle (boutons par ligne)
+        if ($request->has('action_individuelle')) {
+            $data = explode('|', $request->input('action_individuelle'));
+            $action = $data[0];
+            $idV = $data[1];
+            $mois = $data[2];
+
+            if ($action == 'valider') {
+                PdoGsb::majEtatFicheFrais($idV, $mois, 'VA');
+                $msg = "La fiche a été validée et mise en paiement.";
+            }
+            elseif ($action == 'rembourser') {
+                PdoGsb::majEtatFicheFrais($idV, $mois, 'RB');
+                $msg = "La fiche a été marquée comme remboursée.";
+            }
+            elseif ($action == 'annuler') {
+                PdoGsb::majEtatFicheFrais($idV, $mois, 'CL');
+                $msg = "L'action a été annulée.";
+            }
+            elseif ($action == 'supprimer') {
+                PdoGsb::supprimerFiche($idV, $mois);
+                $msg = "La fiche a été supprimée.";
+            }
+
+            return redirect()->route('chemin_SuiviPaiment')->with('message', $msg);
         }
 
-        $fiches = $request->input('fiches', []);
-
-        if(empty($fiches)){
-            return redirect()->route('chemin_SuiviPaiment')
-                    ->with('message', 'Aucune fiche sélectionnée.');
+        // 2. Détection d'une action de masse (boutons sous le tableau)
+        $selection = $request->input('fiches_selectionnees', []);
+        if (empty($selection)) {
+            return redirect()->route('chemin_SuiviPaiment')->with('message', 'Aucune fiche sélectionnée.');
         }
 
-        $nbValides = 0;
-        foreach($fiches as $ficheStr){
-            // Chaque valeur est au format "idVisiteur|mois"
-            $parts = explode('|', $ficheStr);
-            if(count($parts) !== 2) continue;
-
-            [$idVisiteur, $mois] = $parts;
-
-            $fiche = PdoGsb::getLesInfosFicheFrais($idVisiteur, $mois);
-            if(!is_array($fiche) || $fiche['idEtat'] !== 'CL') continue;
-
-            PdoGsb::majEtatFicheFrais($idVisiteur, $mois, 'VA');
-            $nbValides++;
+        if ($request->has('btn_valider_masse')) {
+            foreach($selection as $ficheStr) {
+                [$idV, $m] = explode('|', $ficheStr);
+                PdoGsb::majEtatFicheFrais($idV, $m, 'VA');
+            }
+            $msg = "Les fiches sélectionnées ont été validées et mises en paiement.";
+        } elseif ($request->has('btn_supprimer_masse')) {
+            foreach($selection as $ficheStr) {
+                [$idV, $m] = explode('|', $ficheStr);
+                PdoGsb::supprimerFiche($idV, $m);
+            }
+            $msg = count($selection) . " fiche(s) supprimée(s).";
         }
 
-        $message = $nbValides > 0
-            ? $nbValides . ' fiche(s) validée(s) et mise(s) en paiement.'
-            : 'Aucune fiche valide à traiter.';
-
-        return redirect()->route('chemin_SuiviPaiment')
-                ->with('message', $message);
+        return redirect()->route('chemin_SuiviPaiment')->with('message', $msg);
     }
 
-    // Confirmation du remboursement effectif : VA → RB
-    function rembourserPaiement(Request $request){
-        if( session('visiteur') == null){
-            return view('connexion')->with('erreurs',null);
-        }
-
-        $idVisiteur = $request->input('idVisiteur');
-        $mois = $request->input('mois');
-
-        if(empty($idVisiteur) || empty($mois)){
-            return redirect()->route('chemin_SuiviPaiment')
-                    ->with('message', 'La fiche sélectionnée est invalide.');
-        }
-
-        $fiche = PdoGsb::getLesInfosFicheFrais($idVisiteur, $mois);
-        if(!is_array($fiche) || $fiche['idEtat'] !== 'VA'){
-            return redirect()->route('chemin_SuiviPaiment')
-                    ->with('message', 'Cette fiche ne peut pas être remboursée.');
-        }
-
-        PdoGsb::majEtatFicheFrais($idVisiteur, $mois, 'RB');
-
-        return redirect()->route('chemin_SuiviPaiment')
-                ->with('message', 'La fiche a été marquée comme remboursée.');
-    }
-
-    // Edition des fiches en état VA (mise en paiement) pour le mois précédent
     function editerPDF(Request $request){
-        if( session('visiteur') == null){
-            return view('connexion')->with('erreurs',null);
-        }
-
+        if($this->getUtilisateurConnecte() == null) return view('connexion')->with('erreurs', null);
         $anneeMois = MyDate::getAnneeMoisCourant();
-        // On prend le mois précédent comme demandé dans le PDF
-        $moisPrecedent = MyDate::getMoisPrecedent($anneeMois['mois']);
-        $numMois = MyDate::extraireMois($moisPrecedent);
-        $numAnnee = MyDate::extraireAnnee($moisPrecedent);
-
         $fiches = PdoGsb::getLesFichesParEtat('VA');
-
         return view('editionPDF')
             ->with('fiches', $fiches)
-            ->with('numMois', $numMois)
-            ->with('numAnnee', $numAnnee)
+            ->with('numMois', MyDate::extraireMois($anneeMois['mois']))
+            ->with('numAnnee', MyDate::extraireAnnee($anneeMois['mois']))
             ->with('dateEdition', date('d/m/Y'));
-    }
-
-    // Suppression de plusieurs fiches sélectionnées (toutes états confondus)
-    function supprimerFiches(Request $request){
-        if( session('visiteur') == null){
-            return view('connexion')->with('erreurs',null);
-        }
-
-        $fiches = $request->input('fichesSuppr', []);
-
-        if(empty($fiches)){
-            return redirect()->route('chemin_SuiviPaiment')
-                    ->with('message', 'Aucune fiche sélectionnée pour la suppression.');
-        }
-
-        $nbSupprimes = 0;
-        foreach($fiches as $ficheStr){
-            // Chaque valeur est au format "idVisiteur|mois"
-            $parts = explode('|', $ficheStr);
-            if(count($parts) !== 2) continue;
-
-            [$idVisiteur, $mois] = $parts;
-
-            PdoGsb::supprimerFiche($idVisiteur, $mois);
-            $nbSupprimes++;
-        }
-
-        $message = $nbSupprimes > 0
-            ? $nbSupprimes . ' fiche(s) supprimée(s).'
-            : 'Aucune fiche supprimée.';
-
-        return redirect()->route('chemin_SuiviPaiment')
-                ->with('message', $message);
-    }
-
-    // Annulation du remboursement : RB → CL (retour en attente)
-    function annulerRemboursement(Request $request){
-        if( session('visiteur') == null){
-            return view('connexion')->with('erreurs',null);
-        }
-
-        $idVisiteur = $request->input('idVisiteur');
-        $mois = $request->input('mois');
-
-        if(empty($idVisiteur) || empty($mois)){
-            return redirect()->route('chemin_SuiviPaiment')
-                    ->with('message', 'La fiche sélectionnée est invalide.');
-        }
-
-        $fiche = PdoGsb::getLesInfosFicheFrais($idVisiteur, $mois);
-        if(!is_array($fiche) || $fiche['idEtat'] !== 'RB'){
-            return redirect()->route('chemin_SuiviPaiment')
-                    ->with('message', 'Cette fiche ne peut pas être annulée.');
-        }
-
-        PdoGsb::majEtatFicheFrais($idVisiteur, $mois, 'CL');
-
-        return redirect()->route('chemin_SuiviPaiment')
-                ->with('message', 'Le remboursement a été annulé, la fiche est repassée en attente.');
-    }
-
-    // Annulation de la mise en paiement : VA → CL
-    function annulerPaiement(Request $request){
-        if( session('visiteur') == null){
-            return view('connexion')->with('erreurs',null);
-        }
-
-        $idVisiteur = $request->input('idVisiteur');
-        $mois = $request->input('mois');
-
-        if(empty($idVisiteur) || empty($mois)){
-            return redirect()->route('chemin_SuiviPaiment')
-                    ->with('message', 'La fiche sélectionnée est invalide.');
-        }
-
-        $fiche = PdoGsb::getLesInfosFicheFrais($idVisiteur, $mois);
-        if(!is_array($fiche) || $fiche['idEtat'] !== 'VA'){
-            return redirect()->route('chemin_SuiviPaiment')
-                    ->with('message', 'Cette fiche ne peut pas être annulée.');
-        }
-
-        PdoGsb::majEtatFicheFrais($idVisiteur, $mois, 'CL');
-
-        return redirect()->route('chemin_SuiviPaiment')
-                ->with('message', 'La fiche a été repassée en attente.');
     }
 }

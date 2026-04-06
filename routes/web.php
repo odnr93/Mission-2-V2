@@ -10,7 +10,8 @@
 | contains the "web" middleware group. Now create something great!
 |
 */
-        /*-------------------- Use case connexion---------------------------*/
+
+/*-------------------- Use case connexion---------------------------*/
 Route::get('/',[
         'as' => 'chemin_connexion',
         'uses' => 'connexionController@connecter'
@@ -25,7 +26,7 @@ Route::get('deconnexion',[
         'uses'=>'connexionController@deconnecter'
 ]);
 
-         /*-------------------- Use case état des frais---------------------------*/
+/*-------------------- Use case état des frais---------------------------*/
 Route::get('selectionMois',[
         'as'=>'chemin_selectionMois',
         'uses'=>'etatFraisController@selectionnerMois'
@@ -36,8 +37,7 @@ Route::post('listeFrais',[
         'uses'=>'etatFraisController@voirFrais'
 ]);
 
-        /*-------------------- Use case gérer les frais---------------------------*/
-
+/*-------------------- Use case gérer les frais---------------------------*/
 Route::get('gererFrais',[
         'as'=>'chemin_gestionFrais',
         'uses'=>'gererFraisController@saisirFrais'
@@ -53,44 +53,13 @@ Route::get('suiviPaiment',[
         'uses'=>'gererFraisController@suiviPaiment'
 ]);
 
-// AJOUT : route pour la validation individuelle (ancien bouton "Valider" par ligne)
-Route::post('validerPaiementIndividuel',[
-        'as'=>'chemin_validerPaiement_individuel',
-        'uses'=>'gererFraisController@validerPaiementIndividuel'
+// NOUVELLE ROUTE CENTRALISÉE : Remplace toutes les anciennes routes de validation/suppression
+Route::post('traiterActionMasse',[
+        'as'=>'chemin_traiterActionMasse',
+        'uses'=>'gererFraisController@traiterActionMasse'
 ]);
 
-// ANCIEN CODE conservé : renommé pour la validation multiple (cases à cocher)
-Route::post('validerPaiement',[
-        'as'=>'chemin_validerPaiement',
-        'uses'=>'gererFraisController@validerPaiement'
-]);
-
-
-
-Route::post('annulerPaiement',[
-        'as'=>'chemin_annulerPaiement',
-        'uses'=>'gererFraisController@annulerPaiement'
-]);
-
-// AJOUT : route pour passer une fiche à l'état Remboursée (RB)
-Route::post('rembourserPaiement',[
-        'as'=>'chemin_rembourserPaiement',
-        'uses'=>'gererFraisController@rembourserPaiement'
-]);
-
-// AJOUT : route pour annuler un remboursement (RB → CL)
-Route::post('annulerRemboursement',[
-        'as'=>'chemin_annulerRemboursement',
-        'uses'=>'gererFraisController@annulerRemboursement'
-]);
-
-// AJOUT : route pour supprimer plusieurs fiches
-Route::post('supprimerFiches',[
-        'as'=>'chemin_supprimerFiches',
-        'uses'=>'gererFraisController@supprimerFiches'
-]);
-
-// AJOUT : route pour l'édition PDF des fiches de remboursement
+// Route pour l'édition PDF
 Route::get('editionPdf',[
         'as'=>'chemin_editionPdf',
         'uses'=>'gererFraisController@editerPdf'

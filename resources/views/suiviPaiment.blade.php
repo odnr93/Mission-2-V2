@@ -1,16 +1,5 @@
 ﻿@extends('sommaireComptable')
 
-{{--
-  Flux de paiement (3 états) :
-  CL = En attente       → le comptable sélectionne et valide
-  VA = Mise en paiement → étape intermédiaire avant remboursement effectif
-  RB = Remboursée       → paiement confirmé
-
-  Note : le cahier des charges (PDF) prévoit un passage direct CL → RB.
-  L'état VA a été ajouté délibérément pour permettre une vérification
-  intermédiaire par le comptable avant la confirmation du remboursement.
---}}
-
 @section('contenu1')
   {{-- Style pour masquer les éléments inutiles à l'impression --}}
   <style>
@@ -25,153 +14,91 @@
       min-width: 200px !important;
       height: 50px !important;
       cursor: pointer;
+      margin: 5px;
+    }
+    .btn-suppr {
+      background-color: #c0392b;
+      color: #fff;
+      border: none;
+      border-radius: 3px;
     }
   </style>
 
   <div id="contenu">
-    <h2>Suivi des paiements</h2>
+    <h2>Suivi des paiements (Gestion 100% PHP)</h2>
 
     @if(session('message'))
       <p class="info">{{ session('message') }}</p>
     @endif
 
     @if(!empty($fiches))
-      {{-- Le tableau est englobé dans un formulaire pour la sélection multiple --}}
-      <form action="{{ route('chemin_validerPaiement') }}" method="post">
+      {{-- UN SEUL FORMULAIRE pour toutes les actions groupées --}}
+      <form action="{{ route('chemin_traiterActionMasse') }}" method="post">
         {{ csrf_field() }}
         <table class="listeLegere">
           <thead>
             <tr>
-              {{-- Colonne case à cocher avec "tout cocher" --}}
-              <th class="no-print"><input type="checkbox" id="toutCocher"></th>
-              {{-- Colonne case à cocher suppression --}}
-              <th class="no-print"><input type="checkbox" id="toutCocherSuppr"></th>
+              <th class="no-print">Sélection</th>
               <th>Visiteur</th>
               <th>Mois</th>
               <th>Etat</th>
               <th>Montant valide</th>
               <th>Derniere modification</th>
-              <th class="no-print">Action</th>
+              <th class="no-print">Actions individuelles</th>
             </tr>
           </thead>
           <tbody>
           @foreach($fiches as $fiche)
             <tr>
-              {{-- Case à cocher uniquement pour les fiches en attente (CL) --}}
               <td class="no-print">
-                @if($fiche['idEtat'] === 'CL')
-                  <input type="checkbox" name="fiches[]"
-                    value="{{ $fiche['idvisiteur'] }}|{{ $fiche['mois'] }}">
-                @endif
-              </td>
-              {{-- Case à cocher suppression (tous états) --}}
-              <td class="no-print">
-                <input type="checkbox" name="fichesSuppr[]"
+                {{-- Une seule case à cocher pour identifier la fiche --}}
+                <input type="checkbox" name="fiches_selectionnees[]"
                   value="{{ $fiche['idvisiteur'] }}|{{ $fiche['mois'] }}">
               </td>
               <td>{{ $fiche['nom'] }} {{ $fiche['prenom'] }}</td>
               <td>{{ $fiche['numMois'] }}/{{ $fiche['numAnnee'] }}</td>
-              {{--
-                Affichage des 3 états du flux :
-                CL → En attente | VA → Mise en paiement | RB → Remboursée
-              --}}
               <td>
-                @if($fiche['idEtat'] === 'CL')
-                  En attente
-                @elseif($fiche['idEtat'] === 'VA')
-                  Mise en paiement
-                @elseif($fiche['idEtat'] === 'RB')
-                  Remboursée
-                @else
-                  {{ $fiche['idEtat'] }}
-                @endif
+                @if($fiche['idEtat'] === 'CL') En attente
+                @elseif($fiche['idEtat'] === 'VA') Mise en paiement
+                @elseif($fiche['idEtat'] === 'RB') Remboursée
+                @else {{ $fiche['idEtat'] }} @endif
               </td>
               <td>{{ number_format($fiche['montantValide'], 2, ',', ' ') }} &euro;</td>
               <td>{{ MyDate::getFormatFrançais($fiche['dateModif']) }}</td>
               <td class="no-print">
+                {{-- Liens ou boutons directs pour les actions par ligne --}}
                 @if($fiche['idEtat'] === 'CL')
-                  {{-- CL → VA : valider la fiche individuellement --}}
-                  <form action="{{ route('chemin_validerPaiement_individuel') }}" method="post">
-                    {{ csrf_field() }}
-                    <input type="hidden" name="idVisiteur" value="{{ $fiche['idvisiteur'] }}">
-                    <input type="hidden" name="mois" value="{{ $fiche['mois'] }}">
-                    <button type="submit">Valider</button>
-                  </form>
+                    <button type="submit" name="action_individuelle" value="valider|{{ $fiche['idvisiteur'] }}|{{ $fiche['mois'] }}">Valider</button>
                 @elseif($fiche['idEtat'] === 'VA')
-                  {{-- VA → CL : annuler la mise en paiement --}}
-                  <form action="{{ route('chemin_annulerPaiement') }}" method="post">
-                    {{ csrf_field() }}
-                    <input type="hidden" name="idVisiteur" value="{{ $fiche['idvisiteur'] }}">
-                    <input type="hidden" name="mois" value="{{ $fiche['mois'] }}">
-                    <button type="submit">Annuler</button>
-                  </form>
-                  {{-- VA → RB : confirmer le remboursement effectif --}}
-                  <form action="{{ route('chemin_rembourserPaiement') }}" method="post">
-                    {{ csrf_field() }}
-                    <input type="hidden" name="idVisiteur" value="{{ $fiche['idvisiteur'] }}">
-                    <input type="hidden" name="mois" value="{{ $fiche['mois'] }}">
-                    <button type="submit">Rembourser</button>
-                  </form>
+                    <button type="submit" name="action_individuelle" value="annuler|{{ $fiche['idvisiteur'] }}|{{ $fiche['mois'] }}">Annuler</button>
+                    <button type="submit" name="action_individuelle" value="rembourser|{{ $fiche['idvisiteur'] }}|{{ $fiche['mois'] }}">Rembourser</button>
                 @elseif($fiche['idEtat'] === 'RB')
-                  {{-- RB → CL : annuler le remboursement et repasser en attente --}}
-                  <form action="{{ route('chemin_annulerRemboursement') }}" method="post">
-                    {{ csrf_field() }}
-                    <input type="hidden" name="idVisiteur" value="{{ $fiche['idvisiteur'] }}">
-                    <input type="hidden" name="mois" value="{{ $fiche['mois'] }}">
-                    <button type="submit">Annuler</button>
-                  </form>
+                    <button type="submit" name="action_individuelle" value="annuler_rb|{{ $fiche['idvisiteur'] }}|{{ $fiche['mois'] }}">Annuler RB</button>
                 @endif
               </td>
             </tr>
           @endforeach
           </tbody>
         </table>
-        {{-- Bouton de validation groupée (CL → VA) + bouton imprimer --}}
-        <p class="no-print">
-          <button type="submit" class="btn-large">Valider la sélection</button>
-          <button type="button" class="btn-large" onclick="window.print()">Enregistrer en PDF</button>
-          <button type="button" class="btn-large" style="background-color:#c0392b; color:#fff;" onclick="document.getElementById('formSupprimer').dispatchEvent(new Event('submit'))">Supprimer la sélection</button>
-        </p>
-      </form>
 
-      {{-- Formulaire séparé pour la suppression multiple --}}
-      <form action="{{ route('chemin_supprimerFiches') }}" method="post" id="formSupprimer"
-            onsubmit="return confirm('Confirmer la suppression des fiches sélectionnées ? Cette action est irréversible.')">
-        {{ csrf_field() }}
-        <div id="champsSuppr"></div>
+        {{-- BOUTONS D'ACTIONS GROUPÉES --}}
+        <div class="no-print" style="margin-top: 20px;">
+          <button type="submit" name="action_masse" value="valider" class="btn-large">
+            Valider la sélection
+          </button>
+          
+          <button type="submit" name="action_masse" value="supprimer" class="btn-large btn-suppr">
+            Supprimer la sélection
+          </button>
+
+          {{-- Note: L'impression reste une fonction navigateur, mais on peut appeler print() via un bouton sans JS complexe --}}
+          <button type="button" class="btn-large" onclick="window.print()">
+            Imprimer la page
+          </button>
+        </div>
       </form>
     @else
-      <p>Aucune fiche a suivre pour l'instant.</p>
+      <p>Aucune fiche à suivre pour l'instant.</p>
     @endif
   </div>
-
-  {{-- Script pour cocher/décocher toutes les fiches CL --}}
-  <script>
-    // Tout cocher/décocher pour la validation (CL uniquement)
-    document.getElementById('toutCocher').addEventListener('change', function() {
-      document.querySelectorAll('input[name="fiches[]"]').forEach(function(cb) {
-        cb.checked = document.getElementById('toutCocher').checked;
-      });
-    });
-
-    // Tout cocher/décocher pour la suppression (tous états)
-    document.getElementById('toutCocherSuppr').addEventListener('change', function() {
-      document.querySelectorAll('input[name="fichesSuppr[]"]').forEach(function(cb) {
-        cb.checked = document.getElementById('toutCocherSuppr').checked;
-      });
-    });
-
-    // Avant soumission du formulaire suppression, copier les valeurs cochées
-    document.getElementById('formSupprimer').addEventListener('submit', function() {
-      var container = document.getElementById('champsSuppr');
-      container.innerHTML = '';
-      document.querySelectorAll('input[name="fichesSuppr[]"]:checked').forEach(function(cb) {
-        var input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'fichesSuppr[]';
-        input.value = cb.value;
-        container.appendChild(input);
-      });
-    });
-  </script>
 @endsection

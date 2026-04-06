@@ -7,17 +7,13 @@
              </div>  
                <ul id="menuList">
                    <li >
-                    <strong>Bonjour {{ $visiteur['nom'] . ' ' . $visiteur['prenom'] }} vous êtes connecte en tant que comptable</strong>
-                      
+                    <strong>Bonjour {{ $comptable['nom'] . ' ' . $comptable['prenom'] }} vous êtes connecté en tant que comptable</strong>
                    </li>
                   <li class="smenu">
-                     <a href="{{ route('chemin_SuiviPaiment')}}" title="Saisie de paiment ">Suivi de paiment</a>
+                     <a href="{{ route('chemin_SuiviPaiment')}}" title="Suivi de paiement">Suivi de paiement</a>
                   </li>
                   <li class="smenu">
-                     <a href="{{ route('chemin_editionPdf')}}" title="Édition PDF des remboursements">Édition PDF</a>
-                  </li>
-                  <li class="smenu">
-                    <a href="{{ route('chemin_selectionMois') }}" title="Consultation de mes fiches de frais">Mes fiches de frais</a>
+                    <a href="{{ route('chemin_selectionMois') }}" title="Consultation des fiches de frais">Fiches de frais</a>
                   </li>
                <li class="smenu">
                 <a href="{{ route('chemin_deconnexion') }}" title="Se déconnecter">Déconnexion</a>
